@@ -16,6 +16,7 @@ datasource db {
 
 model User {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email       String   @unique
   clerkid     String   @unique
   studio      Media?
   firstName   String?
@@ -23,7 +24,6 @@ model User {
   image       String?
   trial       Boolean  @default(false)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
   firstView    Boolean @default(false)
   workSpace   WorkSpace[]
   videos      Video[]
@@ -47,6 +47,7 @@ model Media {
 
 model WorkSpace {
   id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  type        TYPE
   name        String   @unique
   description String?
   User        User?  @relation(fields:[userId], references: [id])
