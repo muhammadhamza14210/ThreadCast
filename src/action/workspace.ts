@@ -15,9 +15,27 @@ export const hasAccessToWorkspace = async (workSpaceId: string) => {
             User: {
               clerkid: user.id
             }
+          },
+          {
+            members: {
+              every: {
+                User: {
+                  clerkid: user.id
+                }
+              }
+            }
           }
         ]
       }
     });
-  } catch (error) {}
+    return {
+      status: 200,
+      data: { workSpace: isUserInWorkspace }
+    };
+  } catch (error) {
+    return {
+      status: 200,
+      data: { workSpace: null }
+    };
+  }
 };
