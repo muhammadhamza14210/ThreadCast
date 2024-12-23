@@ -5,64 +5,101 @@ import { currentUser } from "@clerk/nextjs/server";
 
 export const onAuthenticateUser = async () => {
   try {
-    const user = await currentUser();
+    const user = await currentUser()
     if (!user) {
-      return { status: 403 };
+      return { status: 403 }
     }
-    const existingUser = await client.user.findUnique({
+
+    const userExist = await client.user.findUnique({
       where: {
-        clerkid: user.id
+        clerkid: user.id,
       },
       include: {
-        workSpace: {
+        workspace: {
           where: {
             User: {
-              clerkid: user.id
-            }
-          }
-        }
-      }
-    });
-    if (existingUser) {
-      return { status: 200, user: existingUser };
+              clerkid: user.id,
+            },
+          },
+        },
+      },
+    })
+    if (userExist) {
+      return { status: 200, user: userExist }
     }
+    
     const newUser = await client.user.create({
       data: {
         clerkid: user.id,
         email: user.emailAddresses[0].emailAddress,
-        firstName: user.firstName,
-        lastName: user.lastName,
+        firstname: user.firstName,
+        lastname: user.lastName,
         image: user.imageUrl,
         studio: {
-          create: {}
+          create: {},
         },
-        workSpace: {
+        subscription: {
+          create: {},
+        },
+        workspace: {
           create: {
             name: `${user.firstName}'s Workspace`,
-            type: "PERSONAL"
-          }
-        }
+            type: 'PERSONAL',
+          },
+        },
       },
       include: {
-        workSpace: {
+        workspace: {
           where: {
             User: {
-              clerkid: user.id
+              clerkid: user.id,
             },
           },
         },
         subscription: {
           select: {
-            plan: true
+            plan: true,
           },
         },
       },
-    });
+    })
     if (newUser) {
-      return { status: 201, user: newUser };
+      return { status: 201, user: newUser }
     }
-    return { status: 400 };
+    return { status: 400 }
   } catch (error) {
-    return { status: 500 };
+    return { status: 500 }
+  }
+}
+
+export const getNotifications = async () => {
+  try {
+    const user = await currentUser();
+    if (!user) return { status: 404 };
+    const notifications = await client.user.findUnique({
+      where: {
+        clerkid: user.id
+      },
+      select: {
+        notification: true,
+        _count: {
+          select: {
+            notification: true
+          }
+        }
+      }
+    });
+    if (notifications && notifications.notification.length > 0) {
+      return {
+        status: 200,
+        data: notifications
+      };
+    }
+    return {
+      status: 404,
+      data: []
+    };
+  } catch (error) {
+    return { status: 404, data: [] };
   }
 };
